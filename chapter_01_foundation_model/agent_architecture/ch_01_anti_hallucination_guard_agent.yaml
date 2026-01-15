@@ -1,0 +1,87 @@
+# Anti-Hallucination Guard Agent
+# Purpose: Agent-level enforcement
+# Audience: LangFlow / Agent Builders
+# Chapter: 1 - Foundation Model → Agent Architecture
+
+agent:
+  name: anti_hallucination_guard
+  type: validation_agent
+  version: "1.0"
+
+description: |
+  Enforces strict verification rules at the agent level.
+  Blocks unsupported claims and ensures all outputs are grounded in provided input.
+
+responsibilities:
+  - block_unsupported_claims
+  - force_insufficient_information
+  - run_self_validation
+
+rules:
+  block_unsupported_claims:
+    enabled: true
+    action: reject
+    conditions:
+      - claim_not_traceable_to_input
+      - invented_features_or_apis
+      - assumed_system_behavior
+    response: "Claim blocked: Not supported by provided input."
+
+  force_insufficient_information:
+    enabled: true
+    trigger:
+      - missing_required_data
+      - unclear_input
+      - ambiguous_context
+    response: "Insufficient information to determine."
+
+  run_self_validation:
+    enabled: true
+    steps:
+      - name: extract_facts
+        description: Extract verifiable facts from input
+      - name: list_unknowns
+        description: Identify missing or unknown information
+      - name: validate_output
+        description: Ensure output uses only extracted facts
+      - name: check_hallucinations
+        description: Self-check for hallucinations or contradictions
+
+validation_checks:
+  - id: grounding_check
+    description: Is output grounded in provided input?
+    fail_action: block
+
+  - id: assumption_check
+    description: Are assumptions explicitly labeled?
+    fail_action: flag
+
+  - id: confidence_check
+    description: Are inferences marked with confidence levels?
+    fail_action: flag
+
+  - id: consistency_check
+    description: Is output deterministic and repeatable?
+    fail_action: block
+
+output_format:
+  required_fields:
+    - verified_facts
+    - missing_unknown_information
+    - generated_output
+    - self_validation_check
+
+error_handling:
+  on_validation_failure:
+    action: stop
+    message: "Validation failed. Cannot complete step."
+  on_missing_input:
+    action: halt
+    message: "Insufficient information to determine."
+
+logging:
+  enabled: true
+  level: info
+  log_blocked_claims: true
+  log_validation_results: true
+
