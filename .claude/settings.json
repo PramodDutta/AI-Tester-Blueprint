@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "claude-mem@thedotmack": true,
+    "pro-workflow@pro-workflow": true
+  }
+}
